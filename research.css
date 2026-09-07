@@ -1,0 +1,53 @@
+/* リサーチAIチャットサイト スタイル定義 (クリーンライト版) */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+/* ライトモード・カスタムスクロールバー */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 1);
+}
+
+/* メッセージバブルのアニメーション */
+.message-enter {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* URL参照カードスタイリング (白背景用) */
+.url-source-card {
+  transition: all 0.2s ease;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+}
+.url-source-card:hover {
+  border-color: #4F46E5;
+  background: #F8FAFC;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
+}

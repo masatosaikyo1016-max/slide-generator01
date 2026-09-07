@@ -1,0 +1,36 @@
+/* 自作スタイル・アスペクト比・強調スタイル定義 */
+.slide-aspect-ratio {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes fieldHighlight {
+  0% { background-color: rgba(59, 130, 246, 0.4); border-color: #60A5FA; transform: scale(1.01); }
+  100% { background-color: rgba(3, 7, 18, 0.8); border-color: #1E293B; transform: scale(1); }
+}
+
+.field-updated {
+  animation: fieldHighlight 1.5s ease-out;
+}
+
+/* プレビュー用太字強調・ヒーローKPI (big_number) スタイル */
+.emphasis-run {
+  font-weight: 800;
+  color: inherit; /* 赤色ではなく親要素の黒色テキスト色を継承して黒太字にする */
+}
+
+.big-number-value {
+  font-size: 80px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.big-number-unit {
+  font-size: 24px;
+  font-weight: 800;
+  margin-left: 8px;
+}

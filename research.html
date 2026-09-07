@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>リサーチStudio - 情報収集AIチャット</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- PDF.js (PDFファイル解析用) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- JSZip (PPTXファイル解析用) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="research.css">
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header / Navigation -->
+  <header class="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-40 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md text-white">
+          <i data-lucide="compass" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            リサーチStudio <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">情報収集AI</span>
+          </h1>
+          <p class="text-xs text-slate-500 font-medium">作成したい資料の目的を入力し、Web一次情報を自動集計・整理</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btn-reset-chat" class="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-700 text-xs font-bold border border-slate-200 flex items-center gap-1.5 transition-colors">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> チャットをやり直す
+        </button>
+        <button id="btn-open-settings" class="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-200 flex items-center gap-1.5 transition-colors">
+          <i data-lucide="key" class="w-3.5 h-3.5 text-indigo-600"></i> 設定
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 flex flex-col gap-4">
+
+    <!-- Status & Information Bar -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+      <div class="flex items-center gap-3">
+        <span id="ai-status-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> チャット待機中
+        </span>
+        <div id="primary-goal-display" class="text-xs text-slate-800 font-bold truncate max-w-lg">
+          資料作成の目的: <span class="text-slate-400 font-normal">（最初のメッセージで自動設定されます）</span>
+        </div>
+      </div>
+      <div id="download-action-container" class="hidden">
+        <button id="btn-download-json" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs flex items-center gap-2 shadow-md transition-all animate-bounce">
+          <i data-lucide="download" class="w-4 h-4"></i> ✨ 集計されたリサーチデータを保存する
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Interface Container -->
+    <div class="flex-1 bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden shadow-sm min-h-[520px]">
+      
+      <!-- Messages Scroll Area -->
+      <div id="chat-messages-container" class="flex-1 p-6 space-y-6 overflow-y-auto max-h-[600px] bg-slate-50/50">
+        
+        <!-- Welcome AI Message -->
+        <div class="flex gap-4 max-w-3xl">
+          <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+            <i data-lucide="bot" class="w-5 h-5"></i>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-900">リサーチAIアシスタント</span>
+              <span class="text-[10px] text-slate-400 font-medium">準備完了</span>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 text-xs text-slate-800 leading-relaxed space-y-2 shadow-sm">
+              <p class="font-bold text-slate-900">こんにちは！どのような資料を作成したいですか？</p>
+              <p class="text-slate-600">例: 「新規事業の導入提案書を作成したい」「業務効率化の企画資料を作成したい」など、気軽に入力してください。</p>
+              <div class="text-[11px] text-slate-500 border-t border-slate-100 pt-2.5 space-y-1">
+                <p>💡 <strong>ご利用の流れ</strong>:</p>
+                <p>① 目的の入力 ➔ ② 資料の流れや型の対話 ➔ ③ 関連情報の収集と表示 ➔ ④ 確認 ➔ ⑤ 資料データ完成</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Attachment Preview Area -->
+      <div id="attached-file-preview-area" class="hidden px-6 py-2.5 bg-indigo-50/80 border-t border-indigo-100 flex items-center justify-between text-xs text-indigo-900 font-medium">
+        <div class="flex items-center gap-2">
+          <i data-lucide="paperclip" class="w-4 h-4 text-indigo-600"></i>
+          <span id="attached-file-name" class="font-bold">ファイル名</span>
+          <span id="attached-file-size" class="text-[10px] text-slate-500"></span>
+        </div>
+        <button id="btn-remove-attachment" class="text-slate-500 hover:text-red-600 text-xs flex items-center gap-1">
+          <i data-lucide="x" class="w-4 h-4"></i> 削除
+        </button>
+      </div>
+
+      <!-- Input Bar (＋ボタン配置) -->
+      <div class="p-4 border-t border-slate-200 bg-white">
+        <form id="chat-input-form" class="flex items-end gap-2.5 max-w-4xl mx-auto">
+          
+          <!-- ＋ボタン (ファイル添付) -->
+          <input type="file" id="chat-file-input" accept=".pptx,.pdf,.txt,.md,.json,.docx" class="hidden">
+          <button 
+            type="button" 
+            id="btn-attach-file" 
+            title="参考にしたいファイルや過去資料を挿入"
+            class="p-3 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 rounded-xl transition-all flex-shrink-0 flex items-center justify-center font-bold"
+          >
+            <i data-lucide="plus" class="w-5 h-5"></i>
+          </button>
+
+          <div class="flex-1 relative">
+            <textarea 
+              id="user-input-field" 
+              rows="2" 
+              placeholder="例: ○○に関する提案資料の構成を相談したい&#10;例: 既存の参考ファイルを読み込ませて分析したい" 
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-indigo-600 transition-all leading-relaxed resize-none"
+            ></textarea>
+          </div>
+
+          <button 
+            type="submit" 
+            id="btn-send-message" 
+            class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all flex-shrink-0 shadow-md"
+          >
+            <span>送信</span>
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- API Key Modal -->
+  <div id="modal-api-settings" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden transition-all">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full mx-4 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="key" class="w-4 h-4 text-indigo-600"></i> 設定 (APIキー管理)
+        </h3>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Google Gemini APIキー</label>
+          <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-600">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <button id="btn-save-keys" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors">
+          保存する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JavaScript -->
+  <script src="research.js"></script>
+</body>
+</html>
